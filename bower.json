@@ -1,0 +1,29 @@
+
+{
+  "name": "ventage",
+  "version": "1.0.0",
+  "location": "git://github.com/a2labs/ventage",
+  "description": "Simple eventing library for objects.",
+  "keywords": ["events", "eventing"],
+  "license": "LICENSE",
+  "authors": ["Nicholas Cloud <ncloud@appendto.com>"],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/a2labs/ventage"
+  },
+  "main": "ventage.js",
+  "ignore": ["./test"],
+  "dependencies": {
+    "underscore": "latest",
+    "requirejs": "latest"
+  },
+  "devDependencies": {
+    "mocha": "latest",
+    "chai": "latest"
+  },
+  "ignore": [
+    ".tmp/",
+    ".jshintrc",
+    ".jshintignore"
+  ]
+}
