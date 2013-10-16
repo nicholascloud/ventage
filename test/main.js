@@ -14,6 +14,7 @@ requirejs.config({
 require([
   // Events instance methods
   './ventage.ctor.js',
+  './ventage.create.js',
   './ventage.on.js',
   './ventage.off.js',
   './ventage.clear.js',

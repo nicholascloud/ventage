@@ -1,7 +1,7 @@
 /*global define, chai, setup, suite, test*/
 define(['ventage'], function (Ventage) {
 
-  suite('Events.ctor()', function () {
+  suite('Ventage.ctor()', function () {
     setup(function (done) {
       done();
     });

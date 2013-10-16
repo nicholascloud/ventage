@@ -2,7 +2,7 @@
 define(['ventage'], function (Ventage) {
   var assert = chai.assert;
 
-  suite('Events#on()', function () {
+  suite('Ventage#on()', function () {
     setup(function (done) {
       done();
     });

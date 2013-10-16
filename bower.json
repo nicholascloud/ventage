@@ -1,7 +1,7 @@
 
 {
   "name": "ventage",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "location": "git://github.com/a2labs/ventage",
   "description": "Simple eventing library for objects.",
   "keywords": ["events", "eventing"],

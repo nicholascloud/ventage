@@ -17,6 +17,12 @@
 
   var DEFAULT_CONTEXT = {};
 
+  /**
+   * Invokes a handler in a specified way
+   * @param {Array} args - arguments to pass to the handler
+   * @param {Boolean} async - determines if the handler should be invoked asynchronously.
+   * @param {Object} handler - object with a `callback` property of type Function
+   */
   function invoke(args, async, handler) {
     if (async) {
       return setTimeout(function () {
@@ -86,12 +92,33 @@
     }
   };
 
-  return function (alwaysTriggerAsync) {
+  /**
+   * Ventage constructor
+   * @param {Boolean} [alwaysTriggerAsync] determines if events
+   * should always be triggered asynchronously. Defaults to `false`.
+   * @returns {Object} instance of Ventage
+   * @constructor
+   */
+  function Ventage(alwaysTriggerAsync) {
     alwaysTriggerAsync = alwaysTriggerAsync || false;
     var instance = Object.create(api);
     instance._handlers = [];
     instance._alwaysTriggerAsync = alwaysTriggerAsync;
     return instance;
+  }
+
+  /**
+   * Creates a new instance with a Ventage prototype.
+   * @params {Object} [instanceApi] - methods and properties that should be added to the instance.
+   */
+  Ventage.create = function (instanceApi) {
+    var instance = new Ventage();
+    if (arguments.length === 1) {
+      instance = _.extend(instance, instanceApi);
+    }
+    return instance;
   };
+
+  return Ventage;
 
 }));
