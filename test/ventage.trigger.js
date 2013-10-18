@@ -38,5 +38,20 @@ define(['ventage'], function (Ventage) {
       events.on('foo', callback);
       events.trigger('foo', expectedArg1, expectedArg2);
     });
+
+    test('triggers wildcard callback when any event is raised', function (done) {
+      var times = 0;
+      var ventage = new Ventage();
+      ventage.on('*', function () {
+        times += 1;
+        assert.equal(times, arguments.length);
+        if (times === 3) {
+          done();
+        }
+      });
+      ventage.trigger('foo', 1);
+      ventage.trigger('bar', 1, 2);
+      ventage.trigger('baz', 1, 2, 3);
+    });
   });
 });

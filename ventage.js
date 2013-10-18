@@ -15,7 +15,8 @@
 }(this, function (_/*, global, undefined*/) {
   'use strict';
 
-  var DEFAULT_CONTEXT = {};
+  var DEFAULT_CONTEXT = {},
+    WILD_CARD = '*';
 
   /**
    * Invokes a handler in a specified way
@@ -43,7 +44,9 @@
       if (context) {
         criteria.context = context;
       }
-      return _.where(this._handlers, criteria);
+      var namedHandlers = _.where(this._handlers, criteria);
+      var wildcardHandlers = _.where(this._handlers, {event: WILD_CARD});
+      return _.union(namedHandlers, wildcardHandlers);
     },
     _trigger: function (event, args, async) {
       var handlers = this._filterHandlers(event);

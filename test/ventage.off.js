@@ -17,7 +17,7 @@ define(['ventage'], function (Ventage) {
       done();
     });
 
-    test('removes all callbacks registered for an event form the instance', function (done) {
+    test('removes all callbacks registered for an event from the instance', function (done) {
       var events = new Ventage();
       events.on('foo', function () {});
       events.on('foo', function () {});
