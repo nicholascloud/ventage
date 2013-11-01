@@ -52,5 +52,28 @@ define(['ventage'], function (Ventage) {
       assert.lengthOf(events._handlers, 0);
       done();
     });
+
+    test('piped handler is removed', function (done) {
+      var ventage1 = new Ventage();
+      var ventage2 = new Ventage();
+      var callbackHandle = ventage1.pipe('foo', ventage2);
+      ventage1.on('bar', function () {});
+      assert.lengthOf(ventage1._handlers, 2);
+      ventage1.off('foo', callbackHandle, ventage2);
+      assert.lengthOf(ventage1._handlers, 1);
+      done();
+    });
+
+    test('all piped handles are removed for event + context', function (done) {
+      var ventage1 = new Ventage();
+      var ventage2 = new Ventage();
+      ventage1.pipe('foo', ventage2);
+      ventage1.pipe('foo', ventage2);
+      ventage1.pipe('foo', ventage2);
+      assert.lengthOf(ventage1._handlers, 3);
+      ventage1.off('foo', null, ventage2);
+      assert.lengthOf(ventage1._handlers, 0);
+      done();
+    });
   });
 });

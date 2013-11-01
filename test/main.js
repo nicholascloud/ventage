@@ -19,7 +19,8 @@ require([
   './ventage.off.js',
   './ventage.clear.js',
   './ventage.trigger.js',
-  './ventage.triggerAsync.js'
+  './ventage.triggerAsync.js',
+  './ventage.pipe.js'
 ], function () {
   'use strict';
   mocha.checkLeaks();

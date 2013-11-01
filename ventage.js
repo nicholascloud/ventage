@@ -92,6 +92,15 @@
     triggerAsync: function (event/*, ...args*/) {
       var args = Array.prototype.slice.call(arguments, 1);
       this._trigger.call(this, event, args, true);
+    },
+    pipe: function (event, otherVentage) {
+      function callback () {
+        var triggerArgs = Array.prototype.slice.call(arguments, 0);
+        triggerArgs.unshift(event);
+        otherVentage.trigger.apply(otherVentage, triggerArgs);
+      }
+      this.on(event, callback, otherVentage);
+      return callback;
     }
   };
 
