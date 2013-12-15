@@ -64,12 +64,20 @@ var poll = Ventage.create({
 });
 ```
 
+#### by instantiating Ventage objects directly
+
+```javascript
+var v = new Ventage();
+v.on('foo', onFoo);
+v.trigger('foo', 'bar');
+```
+
 ### Using Ventage objects
 
 Client objects can subscribe to events raised by Ventage objects.
 
 ```javascript
-var v = Object.create(new Ventage());
+var v = new Ventage();
 v.on('message', function (sender, content) {
   console.log('message from %s: %s', sender, content);
 });
@@ -109,11 +117,11 @@ If `off()` is called with no arguments, it will unsubscribe all callbacks from a
 
 If `off()` is called with an event name only, it will unsubscribe all callbacks from that event.
 
-If `off()` is called with an event name and a callback reference, it will subscribe that callback only from the event. If the callback was subscribed with a specific context, it is necessary to provide that context to the `off()` method to unsubscribe the callback.
+If `off()` is called with an event name and a callback reference, it will unsubscribe _only_ that callback from the event. If the callback was subscribed with a specific context, it is necessary to provide that context to the `off()` method to unsubscribe the callback.
 
 #### piping events
 
-Events can be piped from one Ventage instance to another. This means that events triggered on one instance will also be triggered, with the same arguments, on the other.
+Events may be piped from one Ventage instance to another. This means that events triggered on one instance will also be triggered, with the same arguments, on the other.
 
 ```javascript
 var v1 = new Ventage();
@@ -127,6 +135,8 @@ v1.off('alert', callbackHandle, v2);
 ```
 
 The context for a piped event is always the receiving Ventage object (in the code above, `v2`).
+
+The callback handle is returned from `pipe()` so that it may later be used to unsubscribe from the piped event.
 
 #### subscribing to wildcard events
 
