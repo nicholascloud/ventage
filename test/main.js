@@ -1,13 +1,7 @@
 /*global requirejs, require, mocha*/
 requirejs.config({
   paths: {
-    'underscore': '../bower_components/underscore/underscore',
     'ventage': '../ventage'
-  },
-  shim: {
-    'underscore': {
-      exports: '_'
-    }
   }
 });
 

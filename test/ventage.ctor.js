@@ -1,5 +1,6 @@
-/*global define, chai, setup, suite, test*/
+/*global define, setup, suite, test*/
 define(['ventage'], function (Ventage) {
+  'use strict';
 
   suite('Ventage.ctor()', function () {
     setup(function (done) {
