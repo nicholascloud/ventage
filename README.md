@@ -15,10 +15,6 @@ In the browser it may be used:
 - as a require.js AMD module
 - as a direct script import
 
-## Dependencies
-
-Ventage depends on underscore.js. If you are using require.js, Ventage expects the dependency name to be `underscore`.
-
 ## Usage
 
 ### Creating Ventage objects
