@@ -4,16 +4,147 @@
 
   // AMD (require.js) module
   if (typeof define === 'function' && define.amd) {
-    return define(['underscore'], function (_) {
-      return factory(_);
+    return define([], function () {
+      return factory();
     });
   }
 
   // browser
-  global.Ventage = factory(global._);
+  global.Ventage = factory();
 
-}(this, function (_/*, global, undefined*/) {
+}(this, function () {
   'use strict';
+
+  var _ = {
+    ES5_FOREACH: !!([].forEach),
+    ES5_BIND: !!(function () {}.bind),
+    ES5_KEYS: !!(Object.keys),
+    ES5_MAP: !!([].map),
+    isUndefined: function (wut) {
+      return typeof wut === 'undefined';
+    },
+    isFunction: function (func) {
+      /*jshint eqeqeq:false*/
+      return typeof func == 'function';
+      /*jshint eqeqeq:true*/
+    },
+    where: function (collection, criteria) {
+      var found = [];
+      _.each(collection, function (item) {
+        for (var key in criteria) {
+          if (!criteria.hasOwnProperty(key)) {
+            continue;
+          }
+          if (!item.hasOwnProperty(key)) {
+            return;
+          }
+          if (item[key] !== criteria[key]) {
+            return;
+          }
+        }
+        found.push(item);
+      });
+      return found;
+    },
+    union: function (/*...collections*/) {
+      var arrays = Array.prototype.slice.call(arguments);
+      var combined = [].concat.apply([], arrays);
+      var unique = [];
+      _.each(combined, function (item) {
+        if (unique.indexOf(item) < 0) {
+          unique.push(item);
+        }
+      });
+      return unique;
+    },
+    bind: function (func, context /*...boundArgs*/) {
+      var boundArgs = Array.prototype.slice.call(arguments, 2);
+      if (_.ES5_BIND) {
+        return func.bind.apply(func, [context].concat(boundArgs));
+      }
+      return function (/*...args*/) {
+        var args = Array.prototype.slice.call(arguments);
+        return func.apply(context, boundArgs.concat(args));
+      };
+    },
+    each: function (collection, iterator, context) {
+      if (_.ES5_FOREACH) {
+        return collection.forEach(iterator, context);
+      }
+      var i = 0, len = collection.length;
+      if (len === 0) {
+        return;
+      }
+      for (i; i < len; i += 1) {
+        iterator(collection[i], i, collection);
+      }
+    },
+    difference: function (collection /*,...collections*/) {
+      var arrays = Array.prototype.slice.call(arguments, 1);
+      var combined = [].concat.apply([], arrays);
+      var diffed = [];
+      _.each(collection, function (item) {
+        if (combined.indexOf(item) < 0) {
+          diffed.push(item);
+        }
+      });
+      return diffed;
+    },
+    extend: function (/*...objects*/) {
+      var objects = Array.prototype.slice.call(arguments);
+      var len = objects.length;
+
+      function accumulate(key, bucket, objectIndex) {
+        if (arguments.length === 1) {
+          bucket = [];
+          objectIndex = 0;
+        }
+        if (objectIndex === len) {
+          return bucket[0];
+        }
+        var object = objects[objectIndex];
+        if (object.hasOwnProperty(key)) {
+          bucket.unshift(object[key]);
+        }
+        return accumulate(key, bucket, objectIndex + 1);
+      }
+
+      var allKeys = _.union.apply(_, _.map(objects, function (object) {
+        return _.keys(object);
+      }));
+
+      var extended = {};
+      _.each(allKeys, function (key) {
+        var value = accumulate(key);
+        if (!_.isUndefined(value)) {
+          extended[key] = value;
+        }
+      });
+      return extended;
+    },
+    keys: function (object) {
+      if (_.ES5_KEYS) {
+        return Object.keys(object);
+      }
+      var keys = [];
+      for (var key in object) {
+        if (object.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    },
+    map: function (collection, iterator) {
+      if (_.ES5_MAP) {
+        return collection.map(iterator);
+      }
+      var mapped = [];
+      _.each(collection, function (item, index) {
+        mapped[index] = iterator(item);
+      });
+      return mapped;
+    }
+  };
 
   var DEFAULT_CONTEXT = {},
     WILD_CARD = '*';

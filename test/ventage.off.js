@@ -1,5 +1,6 @@
 /*global define, chai, setup, suite, test*/
 define(['ventage'], function (Ventage) {
+  'use strict';
   var assert = chai.assert;
 
   suite('Ventage#off()', function () {
