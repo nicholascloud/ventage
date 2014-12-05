@@ -90,8 +90,8 @@
       });
       return diffed;
     },
-    extend: function (/*...objects*/) {
-      var objects = Array.prototype.slice.call(arguments);
+    extend: function (target /*...objects*/) {
+      var objects = Array.prototype.slice.call(arguments, 1);
       var len = objects.length;
 
       function accumulate(key, bucket, objectIndex) {
@@ -113,14 +113,13 @@
         return _.keys(object);
       }));
 
-      var extended = {};
       _.each(allKeys, function (key) {
         var value = accumulate(key);
         if (!_.isUndefined(value)) {
-          extended[key] = value;
+          target[key] = value;
         }
       });
-      return extended;
+      return target;
     },
     keys: function (object) {
       if (_.ES5_KEYS) {
