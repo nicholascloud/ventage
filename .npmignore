@@ -1,0 +1,5 @@
+_tmp/
+.idea/
+.jshintrc
+.jshintignore
+test/
