@@ -3,3 +3,4 @@ _tmp/
 .jshintrc
 .jshintignore
 test/
+bower_components/
