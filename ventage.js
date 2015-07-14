@@ -1,4 +1,4 @@
-/*global define*/
+/*global define, module*/
 (function (global, factory) {
   'use strict';
 
@@ -7,6 +7,12 @@
     return define([], function () {
       return factory();
     });
+  }
+
+  // CommonJS module
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+    return;
   }
 
   // browser

@@ -10,9 +10,16 @@ Ventage may be installed as a bower package:
 $ bower install ventage
 ```
 
+It may also be installed as a CommonJS module:
+
+```
+$ npm install ventage
+```
+
 In the browser it may be used:
 
 - as a require.js AMD module
+- as a CommonJS module with Browserify
 - as a direct script import
 
 ## Usage
