@@ -62,6 +62,8 @@
   "globals": {
     "suite": true,
     "test": true,
-    "setup": true
+    "setup": true,
+    "define": true,
+    "module": true
   }
 }

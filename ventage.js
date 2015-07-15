@@ -1,4 +1,3 @@
-/*global define, module*/
 (function (global, factory) {
   'use strict';
 
