@@ -20,7 +20,7 @@ In the browser it may be used:
 
 - as a require.js AMD module
 - as a CommonJS module with Browserify
-- as a direct script import
+- as a direct `<script>` reference
 
 ## Usage
 

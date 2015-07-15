@@ -7,7 +7,7 @@
   "forin": true,
   "freeze": true,
   "immed": true,
-  "indent": true,
+  "indent": 2,
   "latedef": true,
   "newcap": true,
   "noarg": true,
@@ -35,7 +35,6 @@
   "laxbreak": false,
   "laxcomma": false,
   "loopfunc": false,
-  "maxerr": false,
   "moz": false,
   "multistr": false,
   "notypeof": false,
@@ -47,17 +46,22 @@
   "validthis": false,
   "noyield": false,
   "browser": true,
-  "couch": false,
   "devel": true,
+  "node": true,
+  "couch": false,
   "dojo": false,
   "jquery": false,
   "mootools": false,
-  "node": false,
   "nonstandard": false,
   "phantom": false,
   "prototypejs": false,
   "rhino": false,
   "worker": false,
   "wsh": false,
-  "yui": false
+  "yui": false,
+  "globals": {
+    "suite": true,
+    "test": true,
+    "setup": true
+  }
 }

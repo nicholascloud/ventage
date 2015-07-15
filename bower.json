@@ -12,11 +12,8 @@
   },
   "main": "ventage.js",
   "dependencies": {
-    "requirejs": "latest"
   },
   "devDependencies": {
-    "mocha": "latest",
-    "chai": "latest"
   },
   "ignore": [
     "_tmp/",
@@ -24,6 +21,7 @@
     ".jshintrc",
     ".jshintignore",
     "test/",
-    "bower_components/"
+    "bower_components/",
+    "node_modules/"
   ]
 }

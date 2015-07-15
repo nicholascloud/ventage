@@ -4,3 +4,4 @@ _tmp/
 .jshintignore
 test/
 bower_components/
+node_modules/
