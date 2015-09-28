@@ -25,17 +25,20 @@
     ES5_BIND: !!(function () {}.bind),
     ES5_KEYS: !!(Object.keys),
     ES5_MAP: !!([].map),
+
     isUndefined: function (wut) {
       return typeof wut === 'undefined';
     },
+
     isFunction: function (func) {
       /*jshint eqeqeq:false*/
       return typeof func == 'function';
       /*jshint eqeqeq:true*/
     },
+
     where: function (collection, criteria) {
       var found = [];
-      _.each(collection, function (item) {
+      this.each(collection, function (item) {
         for (var key in criteria) {
           if (!criteria.hasOwnProperty(key)) {
             continue;
@@ -51,20 +54,22 @@
       });
       return found;
     },
+
     union: function (/*...collections*/) {
       var arrays = Array.prototype.slice.call(arguments);
       var combined = [].concat.apply([], arrays);
       var unique = [];
-      _.each(combined, function (item) {
+      this.each(combined, function (item) {
         if (unique.indexOf(item) < 0) {
           unique.push(item);
         }
       });
       return unique;
     },
+
     bind: function (func, context /*...boundArgs*/) {
       var boundArgs = Array.prototype.slice.call(arguments, 2);
-      if (_.ES5_BIND) {
+      if (this.ES5_BIND) {
         return func.bind.apply(func, [context].concat(boundArgs));
       }
       return function (/*...args*/) {
@@ -72,8 +77,9 @@
         return func.apply(context, boundArgs.concat(args));
       };
     },
+
     each: function (collection, iterator, context) {
-      if (_.ES5_FOREACH) {
+      if (this.ES5_FOREACH) {
         return collection.forEach(iterator, context);
       }
       var i = 0, len = collection.length;
@@ -84,18 +90,21 @@
         iterator(collection[i], i, collection);
       }
     },
+
     difference: function (collection /*,...collections*/) {
       var arrays = Array.prototype.slice.call(arguments, 1);
       var combined = [].concat.apply([], arrays);
       var diffed = [];
-      _.each(collection, function (item) {
+      this.each(collection, function (item) {
         if (combined.indexOf(item) < 0) {
           diffed.push(item);
         }
       });
       return diffed;
     },
+
     extend: function (target /*...objects*/) {
+      var self = this;
       var objects = Array.prototype.slice.call(arguments, 1);
       var len = objects.length;
 
@@ -114,20 +123,21 @@
         return accumulate(key, bucket, objectIndex + 1);
       }
 
-      var allKeys = _.union.apply(_, _.map(objects, function (object) {
-        return _.keys(object);
+      var allKeys = self.union.apply(self, self.map(objects, function (object) {
+        return self.keys(object);
       }));
 
-      _.each(allKeys, function (key) {
+      self.each(allKeys, function (key) {
         var value = accumulate(key);
-        if (!_.isUndefined(value)) {
+        if (!self.isUndefined(value)) {
           target[key] = value;
         }
       });
       return target;
     },
+
     keys: function (object) {
-      if (_.ES5_KEYS) {
+      if (this.ES5_KEYS) {
         return Object.keys(object);
       }
       var keys = [];
@@ -138,12 +148,13 @@
       }
       return keys;
     },
+
     map: function (collection, iterator) {
-      if (_.ES5_MAP) {
+      if (this.ES5_MAP) {
         return collection.map(iterator);
       }
       var mapped = [];
-      _.each(collection, function (item, index) {
+      this.each(collection, function (item, index) {
         mapped[index] = iterator(item);
       });
       return mapped;
@@ -168,7 +179,25 @@
     handler.callback.apply(handler.context, args);
   }
 
-  var api = {
+  /**
+   * @typedef {Object} Handler
+   * @param {String} event
+   * @param {Function} callback
+   * @param {Object|*} context
+   */
+
+  /**
+   * @name VentageInterface
+   */
+  var ventageInterface = {
+    /**
+     * Filters event handlers based on given criteria.
+     * @param {String} event
+     * @param {Function} [callback]
+     * @param {Object|*} [context]
+     * @returns {Array.<Handler>} handlers
+     * @private
+     */
     _filterHandlers: function (event, callback, context) {
       var criteria = {
         event: event
@@ -183,6 +212,14 @@
       var wildcardHandlers = _.where(this._handlers, {event: WILD_CARD});
       return _.union(namedHandlers, wildcardHandlers);
     },
+
+    /**
+     * Triggers the specified event.
+     * @param {String} event
+     * @param {Array.<*>} args
+     * @param {Boolean} async
+     * @private
+     */
     _trigger: function (event, args, async) {
       var handlers = this._filterHandlers(event);
       if (handlers.length === 0) {
@@ -191,6 +228,13 @@
       var invocation = _.bind(invoke, null, args, async);
       _.each(handlers, invocation);
     },
+
+    /**
+     * Creates an event handler on the instance.
+     * @param {String} event
+     * @param {Function} callback
+     * @param {Object|*} [context]
+     */
     on: function (event, callback, context) {
       context = context || DEFAULT_CONTEXT;
       var handlers = this._filterHandlers(event, callback, context);
@@ -203,6 +247,13 @@
         context: context
       });
     },
+
+    /**
+     * Removes some or all handlers from the instance.
+     * @param {String} [event]
+     * @param {Function} [callback]
+     * @param {Object|*} [context]
+     */
     off: function (event, callback, context) {
       if (arguments.length === 0) {
         return this.clear();
@@ -213,26 +264,64 @@
         return;
       }
       this._handlers = _.difference(this._handlers, handlers);
+      _.each(handlers, function (handler) {
+        handler.event = null;
+        handler.callback = null;
+        handler.context = null;
+      });
     },
+
+    /**
+     * Clears all event handlers from the instance.
+     */
     clear: function () {
+      _.each(this._handlers, function (handler) {
+        handler.event = null;
+        handler.callback = null;
+        handler.context = null;
+      });
       this._handlers = [];
     },
-    trigger: function (event/*, ...args*/) {
+
+    /**
+     * Trigger an event synchronously.
+     * @param {String} event
+     * @param {...*} args
+     */
+    trigger: function (event, args) {
       if (this._alwaysTriggerAsync) {
         return this.triggerAsync.apply(this, arguments);
       }
-      var args = Array.prototype.slice.call(arguments, 1);
+      args = Array.prototype.slice.call(arguments, 1);
       this._trigger.call(this, event, args, false);
     },
-    triggerAsync: function (event/*, ...args*/) {
-      var args = Array.prototype.slice.call(arguments, 1);
+
+    /**
+     * Trigger an event asynchronously.
+     * @param {String} event
+     * @param {...*} [args]
+     */
+    triggerAsync: function (event, args) {
+      args = Array.prototype.slice.call(arguments, 1);
       this._trigger.call(this, event, args, true);
     },
+
+    /**
+     * Pipes an event and its args to another Ventage instance.
+     * @param {String} event
+     * @param {Ventage} otherVentage
+     * @returns {Function} callback
+     */
     pipe: function (event, otherVentage) {
       function callback () {
+        /*jshint validthis:true*/
+        /*
+         * The callback is invoked with the context object
+         *   as its `this` value.
+         */
         var triggerArgs = Array.prototype.slice.call(arguments, 0);
         triggerArgs.unshift(event);
-        otherVentage.trigger.apply(otherVentage, triggerArgs);
+        this.trigger.apply(this, triggerArgs);
       }
       this.on(event, callback, otherVentage);
       return callback;
@@ -240,6 +329,8 @@
   };
 
   /**
+   * @typedef {Object} Ventage
+   * @augments VentageInterface
    * Ventage constructor
    * @param {Boolean} [alwaysTriggerAsync] determines if events
    * should always be triggered asynchronously. Defaults to `false`.
@@ -248,7 +339,7 @@
    */
   function Ventage(alwaysTriggerAsync) {
     alwaysTriggerAsync = alwaysTriggerAsync || false;
-    var instance = Object.create(api);
+    var instance = Object.create(ventageInterface);
     instance._handlers = [];
     instance._alwaysTriggerAsync = alwaysTriggerAsync;
     return instance;
