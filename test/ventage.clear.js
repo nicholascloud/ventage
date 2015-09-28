@@ -14,9 +14,13 @@ suite('Ventage#clear()', function () {
     events.on('foo', callback);
     events.on('bar', callback);
     events.on('baz', function () {}, {});
-    assert.lengthOf(events._handlers, 3);
+    assert.lengthOf(events._handlerMap.foo, 1);
+    assert.lengthOf(events._handlerMap.bar, 1);
+    assert.lengthOf(events._handlerMap.baz, 1);
     events.clear();
-    assert.lengthOf(events._handlers, 0);
+    assert.isFalse(events._handlerMap.hasOwnProperty('foo'));
+    assert.isFalse(events._handlerMap.hasOwnProperty('bar'));
+    assert.isFalse(events._handlerMap.hasOwnProperty('baz'));
     done();
   });
 });

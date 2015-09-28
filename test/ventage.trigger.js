@@ -8,6 +8,14 @@ suite('Ventage#trigger()', function () {
     done();
   });
 
+  test('throws when event argument missing', function (done) {
+    var events = new Ventage();
+    assert.throws(function () {
+      events.trigger();
+    }, Error);
+    done();
+  });
+
   test('triggers a callback when an event is raised', function (done) {
     var events = new Ventage();
     var callback = function () {

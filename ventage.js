@@ -20,199 +20,123 @@
 }(this, function () {
   'use strict';
 
-  var _ = {
-    ES5_FOREACH: !!([].forEach),
-    ES5_BIND: !!(function () {}.bind),
-    ES5_KEYS: !!(Object.keys),
-    ES5_MAP: !!([].map),
-
-    isUndefined: function (wut) {
-      return typeof wut === 'undefined';
-    },
-
-    isFunction: function (func) {
-      /*jshint eqeqeq:false*/
-      return typeof func == 'function';
-      /*jshint eqeqeq:true*/
-    },
-
-    where: function (collection, criteria) {
-      var found = [];
-      this.each(collection, function (item) {
-        for (var key in criteria) {
-          if (!criteria.hasOwnProperty(key)) {
-            continue;
-          }
-          if (!item.hasOwnProperty(key)) {
-            return;
-          }
-          if (item[key] !== criteria[key]) {
-            return;
-          }
-        }
-        found.push(item);
-      });
-      return found;
-    },
-
-    union: function (/*...collections*/) {
-      var arrays = Array.prototype.slice.call(arguments);
-      var combined = [].concat.apply([], arrays);
-      var unique = [];
-      this.each(combined, function (item) {
-        if (unique.indexOf(item) < 0) {
-          unique.push(item);
-        }
-      });
-      return unique;
-    },
-
-    bind: function (func, context /*...boundArgs*/) {
-      var boundArgs = Array.prototype.slice.call(arguments, 2);
-      if (this.ES5_BIND) {
-        return func.bind.apply(func, [context].concat(boundArgs));
-      }
-      return function (/*...args*/) {
-        var args = Array.prototype.slice.call(arguments);
-        return func.apply(context, boundArgs.concat(args));
-      };
-    },
-
-    each: function (collection, iterator, context) {
-      if (this.ES5_FOREACH) {
-        return collection.forEach(iterator, context);
-      }
-      var i = 0, len = collection.length;
-      if (len === 0) {
-        return;
-      }
-      for (i; i < len; i += 1) {
-        iterator(collection[i], i, collection);
-      }
-    },
-
-    difference: function (collection /*,...collections*/) {
-      var arrays = Array.prototype.slice.call(arguments, 1);
-      var combined = [].concat.apply([], arrays);
-      var diffed = [];
-      this.each(collection, function (item) {
-        if (combined.indexOf(item) < 0) {
-          diffed.push(item);
-        }
-      });
-      return diffed;
-    },
-
-    extend: function (target /*...objects*/) {
-      var self = this;
-      var objects = Array.prototype.slice.call(arguments, 1);
-      var len = objects.length;
-
-      function accumulate(key, bucket, objectIndex) {
-        if (arguments.length === 1) {
-          bucket = [];
-          objectIndex = 0;
-        }
-        if (objectIndex === len) {
-          return bucket[0];
-        }
-        var object = objects[objectIndex];
-        if (object.hasOwnProperty(key)) {
-          bucket.unshift(object[key]);
-        }
-        return accumulate(key, bucket, objectIndex + 1);
-      }
-
-      var allKeys = self.union.apply(self, self.map(objects, function (object) {
-        return self.keys(object);
-      }));
-
-      self.each(allKeys, function (key) {
-        var value = accumulate(key);
-        if (!self.isUndefined(value)) {
-          target[key] = value;
-        }
-      });
-      return target;
-    },
-
-    keys: function (object) {
-      if (this.ES5_KEYS) {
-        return Object.keys(object);
-      }
-      var keys = [];
-      for (var key in object) {
-        if (object.hasOwnProperty(key)) {
-          keys.push(key);
-        }
-      }
-      return keys;
-    },
-
-    map: function (collection, iterator) {
-      if (this.ES5_MAP) {
-        return collection.map(iterator);
-      }
-      var mapped = [];
-      this.each(collection, function (item, index) {
-        mapped[index] = iterator(item);
-      });
-      return mapped;
-    }
-  };
-
-  var DEFAULT_CONTEXT = {},
-    WILD_CARD = '*';
-
   /**
-   * Invokes a handler in a specified way
-   * @param {Array} args - arguments to pass to the handler
-   * @param {Boolean} async - determines if the handler should be invoked asynchronously.
-   * @param {Object} handler - object with a `callback` property of type Function
+   * Copies properties to target from arguments passed
+   *   subsequent to target.
+   * @param {Object} target
+   * @param {...Object}
+   * @returns {Object}
    */
-  function invoke(args, async, handler) {
-    if (async) {
-      return setTimeout(function () {
-        handler.callback.apply(handler.context, args);
-      }, 0);
+  function extend (target /*...objects*/) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    function copyFrom(source) {
+      return function (key) {
+        target[key] = source[key];
+      };
     }
-    handler.callback.apply(handler.context, args);
+    while (sources.length) {
+      var source = sources.shift();
+      Object.keys(source).forEach(copyFrom(source));
+    }
+    return target;
   }
 
   /**
-   * @typedef {Object} Handler
-   * @param {String} event
-   * @param {Function} callback
-   * @param {Object|*} context
+   * Default context constant.
+   * @type {{}}
    */
+  var DEFAULT_CONTEXT = {};
+
+  /**
+   * Wild card constant.
+   * @type {string}
+   */
+  var WILD_CARD = '*';
+
+  /**
+   * Handler interface
+   * @type {{prepare: Function, invoke: Function, dispose: Function}}
+   */
+  var handlerInterface = {
+
+    /**
+     * Prepare the arguments for the invocation.
+     * @param {String} event
+     * @param {Array.<*>} args
+     * @returns {Array.<*>}
+     */
+    prepare: function (event, args) {
+      return args;
+    },
+
+    /**
+     * Invoke the handler's callback.
+     * @param {Array.<*>} args
+     * @param {Boolean} async
+     */
+    invoke: function (args, async) {
+      var self = this;
+      if (async) {
+        setTimeout(function () {
+          self.callback.apply(self.context, args);
+        }, 0);
+      } else {
+        self.callback.apply(self.context, args);
+      }
+    },
+
+    /**
+     * Dispose of this instance.
+     */
+    dispose: function () {
+      this.callback = null;
+      this.context = null;
+    }
+  };
+
+  /**
+   * Standard handler.
+   * @name Handler
+   * @param {Function} callback
+   * @param {Object} context
+   * @returns {handlerInterface}
+   * @constructor
+   */
+  function Handler(callback, context) {
+    var handler = Object.create(handlerInterface);
+    handler.callback = callback || function () {};
+    handler.context = context || DEFAULT_CONTEXT;
+    return handler;
+  }
+
+  /**
+   * Piped handler.
+   * @name PipedHandler
+   * @param {Object} context
+   * @returns {Handler}
+   * @constructor
+   */
+  function PipedHandler(context) {
+    var handler = new Handler(null, context);
+
+    handler.prepare = function (event, args) {
+      return [event].concat(args);
+    };
+
+    handler.callback = function () {
+      // the value of `this` within the callback is
+      // always the context object
+      var pipedArgs = Array.prototype.slice.call(arguments, 0);
+      this.trigger.apply(this, pipedArgs);
+    };
+
+    return handler;
+  }
 
   /**
    * @name VentageInterface
    */
   var ventageInterface = {
-    /**
-     * Filters event handlers based on given criteria.
-     * @param {String} event
-     * @param {Function} [callback]
-     * @param {Object|*} [context]
-     * @returns {Array.<Handler>} handlers
-     * @private
-     */
-    _filterHandlers: function (event, callback, context) {
-      var criteria = {
-        event: event
-      };
-      if (_.isFunction(callback)) {
-        criteria.callback = callback;
-      }
-      if (context) {
-        criteria.context = context;
-      }
-      var namedHandlers = _.where(this._handlers, criteria);
-      var wildcardHandlers = _.where(this._handlers, {event: WILD_CARD});
-      return _.union(namedHandlers, wildcardHandlers);
-    },
-
     /**
      * Triggers the specified event.
      * @param {String} event
@@ -221,12 +145,27 @@
      * @private
      */
     _trigger: function (event, args, async) {
-      var handlers = this._filterHandlers(event);
-      if (handlers.length === 0) {
-        return;
+      var eventHandlers = (this._handlerMap[event] || []);
+      var wildcardHandlers = (this._handlerMap[WILD_CARD] || []);
+      var triggerHandlers = eventHandlers.concat(wildcardHandlers);
+      triggerHandlers.forEach(function (handler) {
+        args = handler.prepare(event, args);
+        handler.invoke(args, async);
+      });
+    },
+
+    /**
+     * Add a handler to the internal handler map.
+     * @param {String} event
+     * @param {Handler} handler
+     * @private
+     */
+    _addHandler: function (event, handler) {
+      var map = this._handlerMap;
+      if (!map.hasOwnProperty(event)) {
+        map[event] = [];
       }
-      var invocation = _.bind(invoke, null, args, async);
-      _.each(handlers, invocation);
+      map[event].push(handler);
     },
 
     /**
@@ -236,16 +175,34 @@
      * @param {Object|*} [context]
      */
     on: function (event, callback, context) {
-      context = context || DEFAULT_CONTEXT;
-      var handlers = this._filterHandlers(event, callback, context);
-      if (handlers.length > 0) {
-        return;
+      if (!event) {
+        throw new Error('must supply an event name: event');
       }
-      this._handlers.push({
-        event: event,
-        callback: callback,
-        context: context
-      });
+      if (!callback) {
+        throw new Error('must supply a callback: callback');
+      }
+      this._addHandler(event, new Handler(callback, context));
+    },
+
+    /**
+     * Pipes an event and its args to another Ventage instance.
+     *   If `event` is not supplied all events will be piped to
+     *   `otherVentage`.
+     * @param {String} [event]
+     * @param {Ventage} otherVentage
+     * @returns {Function} callback
+     */
+    pipe: function (event, otherVentage) {
+      if (arguments.length === 1) {
+        otherVentage = event;
+        event = WILD_CARD;
+      }
+      if (!otherVentage) {
+        throw new Error('must supply a target for piped events: otherVentage');
+      }
+      var pipedHandler = new PipedHandler(otherVentage);
+      this._addHandler(event, pipedHandler);
+      return pipedHandler.callback;
     },
 
     /**
@@ -258,73 +215,80 @@
       if (arguments.length === 0) {
         return this.clear();
       }
+
       context = context || DEFAULT_CONTEXT;
-      var handlers = this._filterHandlers(event, callback, context);
-      if (handlers.length === 0) {
-        return;
+
+      var map = this._handlerMap,
+        handlers = map[event],
+        culledHandlers = [],
+        handler,
+        dispose;
+
+      while (handlers.length) {
+        handler = handlers.shift();
+        dispose = true;
+
+        if (callback) {
+          dispose = dispose && callback === handler.callback;
+        }
+
+        if (context) {
+          dispose = dispose && context === handler.context;
+        }
+
+        if (dispose) {
+          handler.dispose();
+        } else {
+          culledHandlers.push(handler);
+        }
       }
-      this._handlers = _.difference(this._handlers, handlers);
-      _.each(handlers, function (handler) {
-        handler.event = null;
-        handler.callback = null;
-        handler.context = null;
-      });
+
+      if (culledHandlers.length) {
+        map[event] = culledHandlers;
+      } else {
+        map[event] = null;
+        delete map[event];
+      }
     },
 
     /**
      * Clears all event handlers from the instance.
      */
     clear: function () {
-      _.each(this._handlers, function (handler) {
-        handler.event = null;
-        handler.callback = null;
-        handler.context = null;
+      var map = this._handlerMap;
+      Object.keys(map).forEach(function (event) {
+        var handlers = map[event];
+        while (handlers.length) {
+          handlers.shift().dispose();
+        }
       });
-      this._handlers = [];
+      this._handlerMap = {};
     },
 
     /**
      * Trigger an event synchronously.
      * @param {String} event
-     * @param {...*} args
+     * @param {...*}
      */
-    trigger: function (event, args) {
+    trigger: function (event/*, ...args*/) {
+      if (!event) {
+        throw new Error('must supply an event name: event');
+      }
       if (this._alwaysTriggerAsync) {
         return this.triggerAsync.apply(this, arguments);
       }
-      args = Array.prototype.slice.call(arguments, 1);
-      this._trigger.call(this, event, args, false);
+      var args = Array.prototype.slice.call(arguments, 1);
+      this._trigger(event, args, false);
     },
 
     /**
      * Trigger an event asynchronously.
      * @param {String} event
-     * @param {...*} [args]
+     * @param {...*}
      */
-    triggerAsync: function (event, args) {
-      args = Array.prototype.slice.call(arguments, 1);
-      this._trigger.call(this, event, args, true);
-    },
-
-    /**
-     * Pipes an event and its args to another Ventage instance.
-     * @param {String} event
-     * @param {Ventage} otherVentage
-     * @returns {Function} callback
-     */
-    pipe: function (event, otherVentage) {
-      function callback () {
-        /*jshint validthis:true*/
-        /*
-         * The callback is invoked with the context object
-         *   as its `this` value.
-         */
-        var triggerArgs = Array.prototype.slice.call(arguments, 0);
-        triggerArgs.unshift(event);
-        this.trigger.apply(this, triggerArgs);
-      }
-      this.on(event, callback, otherVentage);
-      return callback;
+    triggerAsync: function (event/*, ...args*/) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      this._trigger(event, args, true);
     }
   };
 
@@ -340,7 +304,7 @@
   function Ventage(alwaysTriggerAsync) {
     alwaysTriggerAsync = alwaysTriggerAsync || false;
     var instance = Object.create(ventageInterface);
-    instance._handlers = [];
+    instance._handlerMap = {};
     instance._alwaysTriggerAsync = alwaysTriggerAsync;
     return instance;
   }
@@ -352,7 +316,7 @@
   Ventage.create = function (instanceApi) {
     var instance = new Ventage();
     if (arguments.length === 1) {
-      instance = _.extend(instance, instanceApi);
+      instance = extend(instance, instanceApi);
     }
     return instance;
   };

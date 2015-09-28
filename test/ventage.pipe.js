@@ -8,12 +8,20 @@ suite('Ventage#pipe()', function () {
     done();
   });
 
+  test('throws when no arguments provided', function (done) {
+    var events = new Ventage();
+    assert.throws(function () {
+      events.pipe();
+    }, Error);
+    done();
+  });
+
   test('creates a callback handler', function (done) {
     var ventage1 = new Ventage();
     var ventage2 = new Ventage();
     var callbackHandle = ventage1.pipe('foo', ventage2);
     assert.isFunction(callbackHandle);
-    assert.lengthOf(ventage1._handlers, 1);
+    assert.lengthOf(ventage1._handlerMap.foo, 1, 'should have 1 foo handler');
     done();
   });
 
@@ -24,6 +32,16 @@ suite('Ventage#pipe()', function () {
       done();
     });
     ventage1.pipe('foo', ventage2);
+    ventage1.trigger('foo');
+  });
+
+  test('triggers a piped wildcard event', function (done) {
+    var ventage1 = new Ventage();
+    var ventage2 = new Ventage();
+    ventage2.on('foo', function () {
+      done();
+    });
+    ventage1.pipe('*', ventage2);
     ventage1.trigger('foo');
   });
 

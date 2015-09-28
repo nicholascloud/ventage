@@ -12,9 +12,9 @@ suite('Ventage#off()', function () {
     var events = new Ventage();
     var callback = function () {};
     events.on('foo', callback);
-    assert.lengthOf(events._handlers, 1);
+    assert.lengthOf(events._handlerMap.foo, 1, 'should have 1 foo handler');
     events.off('foo', callback);
-    assert.lengthOf(events._handlers, 0);
+    assert.isFalse(events._handlerMap.hasOwnProperty('foo'), 'should not have foo handlers');
     done();
   });
 
@@ -24,9 +24,11 @@ suite('Ventage#off()', function () {
     events.on('foo', function () {});
     events.on('bar', function () {});
     events.on('bar', function () {});
-    assert.lengthOf(events._handlers, 4);
+    assert.lengthOf(events._handlerMap.foo, 2, 'should have 2 foo handlers');
+    assert.lengthOf(events._handlerMap.bar, 2, 'should have 2 bar handlers');
     events.off('foo');
-    assert.lengthOf(events._handlers, 2);
+    assert.isFalse(events._handlerMap.hasOwnProperty('foo'), 'should not have foo handlers');
+    assert.isFalse(events._handlerMap.hasOwnProperty('foo'), 'should not have bar handlers');
     done();
   });
 
@@ -36,9 +38,9 @@ suite('Ventage#off()', function () {
     var callback = function () {};
     events.on('foo', callback, context);
     events.on('foo', callback);
-    assert.lengthOf(events._handlers, 2);
+    assert.lengthOf(events._handlerMap.foo, 2);
     events.off('foo', callback, context);
-    assert.lengthOf(events._handlers, 1);
+    assert.lengthOf(events._handlerMap.foo, 1);
     done();
   });
 
@@ -48,9 +50,9 @@ suite('Ventage#off()', function () {
     var callback = function () {};
     events.on('foo', callback, context);
     events.on('foo', callback);
-    assert.lengthOf(events._handlers, 2);
+    assert.lengthOf(events._handlerMap.foo, 2);
     events.off();
-    assert.lengthOf(events._handlers, 0);
+    assert.isFalse(events._handlerMap.hasOwnProperty('foo'));
     done();
   });
 
@@ -59,9 +61,11 @@ suite('Ventage#off()', function () {
     var ventage2 = new Ventage();
     var callbackHandle = ventage1.pipe('foo', ventage2);
     ventage1.on('bar', function () {});
-    assert.lengthOf(ventage1._handlers, 2);
+    assert.lengthOf(ventage1._handlerMap.foo, 1);
+    assert.lengthOf(ventage1._handlerMap.bar, 1);
     ventage1.off('foo', callbackHandle, ventage2);
-    assert.lengthOf(ventage1._handlers, 1);
+    assert.isFalse(ventage1._handlerMap.hasOwnProperty('foo'), 'should not have foo handlers');
+    assert.lengthOf(ventage1._handlerMap.bar, 1, 'should have 1 bar handler');
     done();
   });
 
@@ -71,9 +75,9 @@ suite('Ventage#off()', function () {
     ventage1.pipe('foo', ventage2);
     ventage1.pipe('foo', ventage2);
     ventage1.pipe('foo', ventage2);
-    assert.lengthOf(ventage1._handlers, 3);
+    assert.lengthOf(ventage1._handlerMap.foo, 3, 'should have 3 foo handlers');
     ventage1.off('foo', null, ventage2);
-    assert.lengthOf(ventage1._handlers, 0);
+    assert.isFalse(ventage1._handlerMap.hasOwnProperty('foo'), 'should have no foo handlers');
     done();
   });
 });
