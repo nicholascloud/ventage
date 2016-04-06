@@ -78,7 +78,9 @@
       var self = this;
       if (async) {
         setTimeout(function () {
-          self.callback.apply(self.context, args);
+          if (self.callback) {
+            self.callback.apply(self.context, args);
+          }
         }, 0);
       } else {
         self.callback.apply(self.context, args);
