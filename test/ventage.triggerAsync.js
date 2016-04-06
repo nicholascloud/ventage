@@ -54,4 +54,17 @@ suite('Ventage#triggerAsync()', function () {
     ventage.trigger('bar', 1, 2);
     ventage.trigger('baz', 1, 2, 3);
   });
+
+  test('does not trigger callback when disposed asynchronously', function (done) {
+    var events = new Ventage();
+    var callback = function () {
+      done(new Error('callback should not have been invoked'));
+    };
+    events.on('foo', callback);
+    events.triggerAsync('foo');
+    events.off('foo');
+    setTimeout(function () {
+      done();
+    }, 100);
+  });
 });

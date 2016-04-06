@@ -78,7 +78,7 @@
       var self = this;
       if (async) {
         setTimeout(function () {
-          if (self.callback) {
+          if (!self.isDisposed) {
             self.callback.apply(self.context, args);
           }
         }, 0);
@@ -91,8 +91,12 @@
      * Dispose of this instance.
      */
     dispose: function () {
+      if (this.isDisposed) {
+        return;
+      }
       this.callback = null;
       this.context = null;
+      this.isDisposed = true;
     }
   };
 
@@ -108,6 +112,7 @@
     var handler = Object.create(handlerInterface);
     handler.callback = callback || function () {};
     handler.context = context || DEFAULT_CONTEXT;
+    handler.isDisposed = false;
     return handler;
   }
 
